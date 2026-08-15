@@ -87,7 +87,9 @@ data/               运行时生成的 SQLite 数据库
 
 ## GitHub
 
-项目内置 MIT License 和 GitHub Actions CI（`npm ci` + `npm test`）。`node_modules/` 与 `data/` 已加入 `.gitignore`，本地数据库和账号不会进入仓库。
+项目内置 MIT License 和 GitHub Actions CI（`npm run privacy-check` + `npm test`）。`node_modules/` 与 `data/` 已加入 `.gitignore`，本地数据库和账号不会进入仓库。
+
+提交前请在本地运行 `npm run privacy-check`，它会扫描 Git 跟踪文件并阻止手机号、邮箱、iCloud 账号字段和疑似明文密码进入仓库。
 
 ```bat
 git init
