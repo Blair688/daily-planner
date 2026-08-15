@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/scheduler.test.js tests/caldav.test.js tests/api.test.js"
+    "test": "node --test tests/scheduler.test.js tests/caldav.test.js tests/account.test.js tests/api.test.js"
   },
   "license": "MIT",
   "dependencies": {

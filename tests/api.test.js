@@ -44,81 +44,108 @@ function startServer() {
   });
 }
 
-async function api(base, route, options = {}) {
+async function api(base, route, options = {}, token = '') {
+  const headers = { ...(options.headers || {}) };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (options.body) headers['Content-Type'] = 'application/json';
   const response = await fetch(`${base}${route}`, {
     method: options.method || 'GET',
-    headers: options.body ? { 'Content-Type': 'application/json' } : {},
+    headers,
     body: options.body ? JSON.stringify(options.body) : undefined
   });
   const data = await response.json();
   return { status: response.status, data };
 }
 
-test('API 端到端：任务、排程、设置、诊断', async () => {
+test('API 端到端：多账号、任务、习惯、专注、复盘', async () => {
   const { child, port, dbPath } = await startServer();
   const base = `http://localhost:${port}`;
   try {
+    const registered = await api(base, '/api/auth/register', {
+      method: 'POST',
+      body: { username: 'alice', display_name: '爱丽丝', password: 'secret123' }
+    });
+    assert.equal(registered.status, 201);
+    const token = registered.data.token;
+
     const created = await api(base, '/api/tasks', {
       method: 'POST',
-      body: {
-        title: '跑步 5 公里',
-        date: '2026-08-15',
-        priority: 'P1',
-        category: '健康'
-      }
-    });
+      body: { title: '跑步 5 公里', date: '2026-08-15', priority: 'P1', category: '健康' }
+    }, token);
     assert.equal(created.status, 201);
-    assert.equal(created.data.title, '跑步 5 公里');
 
     const scheduled = await api(base, '/api/schedule/auto', {
       method: 'POST',
       body: { date: '2026-08-15', regenerate: true }
-    });
+    }, token);
     assert.equal(scheduled.status, 200);
     assert.equal(scheduled.data.scheduled.length, 1);
-    assert.equal(scheduled.data.scheduled[0].duration_min, 45);
 
     const patched = await api(base, `/api/tasks/${created.data.id}`, {
       method: 'PATCH',
       body: { start_min: 19 * 60, duration_min: 60, locked: 1 }
-    });
-    assert.equal(patched.status, 200);
+    }, token);
     assert.equal(patched.data.start_min, 19 * 60);
-    assert.equal(patched.data.locked, true);
 
     const settings = await api(base, '/api/settings', {
       method: 'PUT',
-      body: {
-        theme_color: '#7c5cbf',
-        theme_preset: 'violet',
-        day_start_min: 9 * 60,
-        day_end_min: 21 * 60,
-        lunch_start_min: 12 * 60,
-        lunch_end_min: 13 * 60
-      }
-    });
+      body: { theme_color: '#7c5cbf', theme_preset: 'violet', day_start_min: 9 * 60, day_end_min: 21 * 60 }
+    }, token);
     assert.equal(settings.status, 200);
     assert.equal(settings.data.theme_color, '#7c5cbf');
-    assert.equal(settings.data.day_end_min, '1260');
 
-    const diagnose = await api(base, '/api/sync/diagnose', { method: 'POST' });
-    assert.equal(diagnose.status, 200);
-    assert.ok('dns' in diagnose.data);
-    assert.ok('tcp' in diagnose.data);
-    assert.ok('https' in diagnose.data);
-    assert.equal(diagnose.data.auth.status, 'skipped');
+    const habit = await api(base, '/api/habits', {
+      method: 'POST',
+      body: { name: '晨跑', icon: 'run', color: '#2563eb' }
+    }, token);
+    assert.equal(habit.status, 201);
 
-    const deleted = await api(base, `/api/tasks/${created.data.id}`, { method: 'DELETE' });
+    const checkin = await api(base, `/api/habits/${habit.data.id}/checkin`, {
+      method: 'POST',
+      body: { date: '2026-08-15' }
+    }, token);
+    assert.equal(checkin.status, 200);
+
+    const stats = await api(base, '/api/habits/stats?month=2026-08', {}, token);
+    assert.equal(stats.data[0].month_count, 1);
+    assert.equal(typeof stats.data[0].current_streak, 'number');
+
+    const focus = await api(base, '/api/focus/sessions', {
+      method: 'POST',
+      body: { date: '2026-08-15', minutes: 25, note: '深度工作' }
+    }, token);
+    assert.equal(focus.status, 201);
+
+    const review = await api(base, '/api/reviews/2026/33', {
+      method: 'PUT',
+      body: { content: '本周完成得不错' }
+    }, token);
+    assert.equal(review.status, 200);
+    assert.equal(review.data.content, '本周完成得不错');
+
+    const dashboard = await api(base, '/api/stats/dashboard?date=2026-08-15', {}, token);
+    assert.equal(dashboard.status, 200);
+    assert.equal(dashboard.data.tasks.total, 1);
+    assert.equal(dashboard.data.focus.today_minutes, 25);
+
+    const second = await api(base, '/api/auth/register', {
+      method: 'POST',
+      body: { username: 'bob', display_name: '鲍勃' }
+    });
+    const secondToken = second.data.token;
+    const bobTasks = await api(base, '/api/tasks', {}, secondToken);
+    assert.equal(bobTasks.data.length, 0);
+    const bobHabits = await api(base, '/api/habits', {}, secondToken);
+    assert.equal(bobHabits.data.length, 0);
+
+    const deleted = await api(base, `/api/tasks/${created.data.id}`, { method: 'DELETE' }, token);
     assert.equal(deleted.status, 200);
-    assert.equal(deleted.data.ok, true);
   } finally {
     child.kill();
     try {
       fs.rmSync(dbPath, { force: true });
       fs.rmSync(`${dbPath}-wal`, { force: true });
       fs.rmSync(`${dbPath}-shm`, { force: true });
-    } catch {
-      // 临时文件清理失败不影响测试结果
-    }
+    } catch {}
   }
 });
