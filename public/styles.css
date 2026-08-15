@@ -682,6 +682,19 @@ main {
   font-size: 12px;
 }
 
+.guide-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  display: grid;
+  gap: 8px;
+}
+
+.guide-list a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .rule-list {
   display: grid;
   gap: 8px;

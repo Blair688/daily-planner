@@ -620,7 +620,9 @@ async function diagnoseConnection() {
       result.message,
       `DNS：${result.dns.ok ? '正常' : '失败'}（${result.dns.addresses.join(', ') || result.dns.error || '-'}）`,
       `TCP 443：${result.tcp.ok ? '正常' : '失败'}${result.tcp.error ? `（${result.tcp.error}）` : ''}`,
-      `HTTPS：${result.https.ok ? `正常（${result.https.status}）` : `失败（${result.https.error || '-'}）`}`
+      `HTTPS：${result.https.ok ? `正常（${result.https.status}）` : `失败（${result.https.error || '-'}）`}`,
+      `认证：${result.auth.status === 'skipped' ? '未配置' : result.auth.ok ? '成功' : `失败（${result.auth.status}）`}`,
+      ...(result.auth.message && !result.auth.ok ? [result.auth.message] : [])
     ].join('\n');
   } catch (error) {
     box.className = 'result-box error';

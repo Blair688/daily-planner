@@ -75,6 +75,16 @@ netsh advfirewall firewall add rule name="Daily Planner" dir=in action=allow pro
 - 两端同时修改时，按最后修改时间覆盖。
 - 未填写开始时间的任务会同步为全天事件；排程后再次同步会变为具体时间。
 
+## 手机号 Apple ID 限制
+
+Apple 的 CalDAV 第三方访问通常要求使用邮箱形式的 Apple ID。如果你的 Apple ID 只有手机号，即使网络和 App 专用密码都正确，`caldav.icloud.com` 也可能返回 403 Forbidden。
+
+解决办法：
+
+1. 确认 iPhone 的“设置 → 你的名字 → iCloud”中，“日历”和“提醒事项”都已开启。
+2. 在 [appleid.apple.com](https://appleid.apple.com) 登录，查看 Apple ID 是否关联 iCloud 邮箱。
+3. 使用邮箱形式的 Apple ID 重新生成 App 专用密码，填入本应用设置页后重试。
+
 ## 自动排程规则
 
 默认规则示例：

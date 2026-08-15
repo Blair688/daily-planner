@@ -106,6 +106,7 @@ test('API 端到端：任务、排程、设置、诊断', async () => {
     assert.ok('dns' in diagnose.data);
     assert.ok('tcp' in diagnose.data);
     assert.ok('https' in diagnose.data);
+    assert.equal(diagnose.data.auth.status, 'skipped');
 
     const deleted = await api(base, `/api/tasks/${created.data.id}`, { method: 'DELETE' });
     assert.equal(deleted.status, 200);

@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const ical = require('node-ical');
-const { buildEventIcs, buildReminderIcs } = require('../lib/caldav');
+const { buildEventIcs, buildReminderIcs, friendlySyncError, CalDavError } = require('../lib/caldav');
 
 const baseTask = {
   id: 1,
@@ -45,4 +45,9 @@ test('buildReminderIcs 生成带 DUE 的 VTODO', () => {
   const done = buildReminderIcs({ ...baseTask, status: 'done' }, 'uid-done');
   assert.match(done, /STATUS:COMPLETED/);
   assert.match(done, /COMPLETED:/);
+});
+
+test('friendlySyncError 对 401 和 403 返回明确指引', () => {
+  assert.match(friendlySyncError(new CalDavError('401', 401, '')), /App 专用密码/);
+  assert.match(friendlySyncError(new CalDavError('403', 403, '')), /邮箱形式的 Apple ID/);
 });

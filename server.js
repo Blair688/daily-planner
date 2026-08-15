@@ -131,7 +131,7 @@ app.post('/api/settings/test-connection', async (req, res) => {
 });
 
 app.post('/api/sync/diagnose', async (req, res) => {
-  const result = await diagnoseConnection();
+  const result = await diagnoseConnection(db.getSettings());
   res.json(result);
 });
 
