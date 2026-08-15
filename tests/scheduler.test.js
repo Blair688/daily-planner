@@ -75,6 +75,18 @@ test('scheduleDay 尊重自定义时段和午休', () => {
   assert.equal(result.scheduled[0].start_min, 13 * 60 + 30);
 });
 
+test('scheduleDay 同优先级同分类任务不会挤在同一时段', () => {
+  const tasks = [
+    { id: 1, title: '任务一', priority: 'P2', category: '其他', duration_min: 30, start_min: null, locked: 0, status: 'pending' },
+    { id: 2, title: '任务二', priority: 'P2', category: '其他', duration_min: 30, start_min: null, locked: 0, status: 'pending' }
+  ];
+  const result = scheduleDay(tasks, rules);
+  assert.equal(result.scheduled.length, 2);
+  const starts = result.scheduled.map((item) => item.start_min).sort((a, b) => a - b);
+  assert.notEqual(starts[0], starts[1]);
+  assert.ok(starts[1] - starts[0] >= 30);
+});
+
 test('scheduleDay regenerate 会清空旧的自动排程', () => {
   const tasks = [
     { id: 1, title: '旧排程', priority: 'P2', category: '其他', duration_min: 30, start_min: 10 * 60, locked: 0, status: 'pending' }

@@ -123,6 +123,31 @@ test('API 端到端：多账号、任务、习惯、专注、复盘', async () =
     assert.equal(review.status, 200);
     assert.equal(review.data.content, '本周完成得不错');
 
+    const dailyReview = await api(base, '/api/reviews/daily', {
+      method: 'PUT',
+      body: { date: '2026-08-15', content: '今天很充实' }
+    }, token);
+    assert.equal(dailyReview.status, 200);
+
+    const yearlyReview = await api(base, '/api/reviews/yearly', {
+      method: 'PUT',
+      body: { year: 2026, content: '今年进步很大' }
+    }, token);
+    assert.equal(yearlyReview.status, 200);
+
+    const goal = await api(base, '/api/goals', {
+      method: 'POST',
+      body: { year: 2026, title: '读完 20 本书' }
+    }, token);
+    assert.equal(goal.status, 201);
+    const goals = await api(base, '/api/goals?year=2026', {}, token);
+    assert.equal(goals.data.length, 1);
+
+    const monthStats = await api(base, '/api/stats/month?month=2026-08', {}, token);
+    assert.equal(monthStats.status, 200);
+    assert.equal(monthStats.data.length, 31);
+    assert.ok(monthStats.data.some((day) => day.tasks_total > 0));
+
     const dashboard = await api(base, '/api/stats/dashboard?date=2026-08-15', {}, token);
     assert.equal(dashboard.status, 200);
     assert.equal(dashboard.data.tasks.total, 1);

@@ -13,6 +13,11 @@ const state = {
   dashboard: null,
   reviewYear: 0,
   reviewWeek: 0,
+  month: new Date().toISOString().slice(0, 7),
+  dailyReview: {},
+  yearlyReview: {},
+  goals: [],
+  reviewTab: 'weekly',
   editingId: null,
   themeColor: '#1f6f5c',
   dragging: null,
@@ -271,6 +276,7 @@ function switchView(view) {
   if (view === 'dashboard') loadDashboard();
   if (view === 'today') loadTasks();
   if (view === 'timeline') loadTasks().then(renderTimeline);
+  if (view === 'monthly') loadMonthly();
   if (view === 'habits') loadHabits();
   if (view === 'focus') loadFocus();
   if (view === 'review') loadReview();
@@ -560,6 +566,57 @@ function handleTimelinePointerDown(event) {
   block.addEventListener('pointercancel', onEnd);
 }
 
+/* Monthly calendar */
+async function loadMonthly() {
+  try {
+    const stats = await api(`/api/stats/month?month=${state.month}`);
+    renderMonthly(stats);
+  } catch (error) {
+    if (error.message !== '请先登录') toast(error.message, 'error');
+  }
+}
+
+function renderMonthly(stats) {
+  const [year, mon] = state.month.split('-').map(Number);
+  $('#month-label').textContent = `${year} 年 ${mon} 月`;
+  const totalTasks = stats.reduce((sum, day) => sum + day.tasks_total, 0);
+  const doneTasks = stats.reduce((sum, day) => sum + day.tasks_done, 0);
+  const totalHabits = stats.reduce((sum, day) => sum + day.habits, 0);
+  const totalFocus = stats.reduce((sum, day) => sum + day.focus_minutes, 0);
+  $('#month-summary').innerHTML = `
+    <div class="stat-card"><span class="stat-label">任务</span><strong>${doneTasks}/${totalTasks}</strong><small>已完成</small></div>
+    <div class="stat-card"><span class="stat-label">习惯打卡</span><strong>${totalHabits}</strong><small>次</small></div>
+    <div class="stat-card"><span class="stat-label">专注时长</span><strong>${durationLabel(totalFocus) || '0 分钟'}</strong><small>总计</small></div>
+  `;
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  const firstOffset = new Date(year, mon - 1, 1).getDay();
+  const daysInMonth = new Date(year, mon, 0).getDate();
+  const today = localDateString(new Date());
+  let cells = weekdays.map((day) => `<div class="month-weekday">${day}</div>`).join('');
+  for (let i = 0; i < firstOffset; i += 1) cells += '<div class="month-day"></div>';
+  for (const day of stats) {
+    cells += `
+      <button class="month-day ${day.date === today ? 'today' : ''}" data-date="${day.date}">
+        <span class="day-num">${day.date.slice(8)}</span>
+        <div class="day-stats">
+          <span>任务 ${day.tasks_done}/${day.tasks_total}</span>
+          <span>习惯 ${day.habits}</span>
+          <span>专注 ${durationLabel(day.focus_minutes) || '0'}</span>
+        </div>
+      </button>
+    `;
+  }
+  $('#month-calendar').innerHTML = cells;
+  refreshIcons();
+}
+
+function shiftMonthlyMonth(delta) {
+  const [year, month] = state.month.split('-').map(Number);
+  const date = new Date(year, month - 1 + delta, 1);
+  state.month = `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+  loadMonthly();
+}
+
 /* Habits */
 async function loadHabits() {
   try {
@@ -811,20 +868,44 @@ async function loadReview() {
     state.reviewWeek = current.week;
   }
   try {
-    const [review, dashboard] = await Promise.all([
+    const year = new Date().getFullYear();
+    const [review, dashboard, daily, yearly, goals] = await Promise.all([
       api(`/api/reviews/${state.reviewYear}/${state.reviewWeek}`),
-      api(`/api/stats/dashboard?date=${state.date}`)
+      api(`/api/stats/dashboard?date=${state.date}`),
+      api(`/api/reviews/daily?date=${state.date}`),
+      api(`/api/reviews/yearly?year=${year}`),
+      api(`/api/goals?year=${year}`)
     ]);
     $('#review-content').value = review.content || '';
     $('#review-week-label').textContent = `${state.reviewYear} 年第 ${state.reviewWeek} 周`;
+    $('#daily-review-date').value = state.date;
+    $('#daily-review-content').value = daily.content || '';
+    $('#yearly-review-year').value = year;
+    $('#yearly-review-content').value = yearly.content || '';
+    $('#goals-year').value = year;
+    state.dailyReview = daily;
+    state.yearlyReview = yearly;
+    state.goals = goals;
+    renderGoals();
     $('#review-summary').innerHTML = `
       <div class="stat-card"><span class="stat-label">今日完成率</span><strong>${dashboard.tasks.completion}%</strong></div>
       <div class="stat-card"><span class="stat-label">今日习惯</span><strong>${dashboard.habits.done_today}/${dashboard.habits.total}</strong></div>
       <div class="stat-card"><span class="stat-label">本周专注</span><strong>${durationLabel(dashboard.focus.week_minutes) || '0 分钟'}</strong></div>
     `;
+    setReviewTab(state.reviewTab);
   } catch (error) {
     if (error.message !== '请先登录') toast(error.message, 'error');
   }
+}
+
+function setReviewTab(tab) {
+  state.reviewTab = tab;
+  document.querySelectorAll('.review-tab').forEach((button) => {
+    button.classList.toggle('active', button.dataset.reviewTab === tab);
+  });
+  document.querySelectorAll('.review-panel').forEach((panel) => {
+    panel.classList.toggle('hidden', panel.id !== `review-panel-${tab}`);
+  });
 }
 
 function shiftReviewWeek(delta) {
@@ -852,6 +933,111 @@ async function saveReview() {
   } catch (error) {
     toast(error.message, 'error');
   }
+}
+
+async function saveDailyReview() {
+  const date = $('#daily-review-date').value || state.date;
+  try {
+    await api('/api/reviews/daily', {
+      method: 'PUT',
+      body: JSON.stringify({ date, content: $('#daily-review-content').value })
+    });
+    toast('日复盘已保存');
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
+async function loadYearlyReview() {
+  const year = Number($('#yearly-review-year').value) || new Date().getFullYear();
+  try {
+    const review = await api(`/api/reviews/yearly?year=${year}`);
+    $('#yearly-review-content').value = review.content || '';
+    toast(`已载入 ${year} 年复盘`);
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
+async function saveYearlyReview() {
+  const year = Number($('#yearly-review-year').value) || new Date().getFullYear();
+  try {
+    await api('/api/reviews/yearly', {
+      method: 'PUT',
+      body: JSON.stringify({ year, content: $('#yearly-review-content').value })
+    });
+    toast('年度复盘已保存');
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
+async function loadGoals() {
+  const year = Number($('#goals-year').value) || new Date().getFullYear();
+  try {
+    state.goals = await api(`/api/goals?year=${year}`);
+    renderGoals();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
+async function addGoal() {
+  const title = $('#goal-title').value.trim();
+  if (!title) {
+    toast('请输入年度目标', 'error');
+    return;
+  }
+  try {
+    await api('/api/goals', {
+      method: 'POST',
+      body: JSON.stringify({ year: Number($('#goals-year').value), title, status: $('#goal-status').value })
+    });
+    $('#goal-title').value = '';
+    await loadGoals();
+    toast('年度目标已添加');
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
+async function updateGoalStatus(id, status) {
+  try {
+    await api(`/api/goals/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+    await loadGoals();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
+async function deleteGoal(id) {
+  if (!confirm('确定删除这个年度目标吗？')) return;
+  try {
+    await api(`/api/goals/${id}`, { method: 'DELETE' });
+    await loadGoals();
+    toast('年度目标已删除');
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
+function renderGoals() {
+  $('#goal-list').innerHTML = state.goals.map((goal) => `
+    <div class="goal-item" data-id="${goal.id}">
+      <strong>${escapeHtml(goal.title)}</strong>
+      <span class="goal-status ${goal.status}">${goal.status === 'done' ? '已完成' : goal.status === 'doing' ? '进行中' : '未开始'}</span>
+      <select class="goal-change" data-id="${goal.id}">
+        <option value="todo" ${goal.status === 'todo' ? 'selected' : ''}>未开始</option>
+        <option value="doing" ${goal.status === 'doing' ? 'selected' : ''}>进行中</option>
+        <option value="done" ${goal.status === 'done' ? 'selected' : ''}>已完成</option>
+      </select>
+      <button class="icon-btn goal-delete" data-id="${goal.id}" title="删除目标"><i data-lucide="trash-2"></i></button>
+    </div>
+  `).join('') || '<div class="empty-state"><p>这一年还没有目标</p></div>';
+  refreshIcons();
 }
 
 /* Dashboard */
@@ -1140,6 +1326,35 @@ function bindEvents() {
     loadReview();
   });
   $('#review-save').addEventListener('click', saveReview);
+  document.querySelectorAll('.review-tab').forEach((button) => {
+    button.addEventListener('click', () => setReviewTab(button.dataset.reviewTab));
+  });
+  $('#daily-review-save').addEventListener('click', saveDailyReview);
+  $('#yearly-review-year').addEventListener('change', loadYearlyReview);
+  $('#yearly-review-save').addEventListener('click', saveYearlyReview);
+  $('#goals-year').addEventListener('change', loadGoals);
+  $('#goal-add').addEventListener('click', addGoal);
+  $('#goal-list').addEventListener('change', (event) => {
+    const select = event.target.closest('.goal-change');
+    if (select) updateGoalStatus(Number(select.dataset.id), select.value);
+  });
+  $('#goal-list').addEventListener('click', (event) => {
+    const button = event.target.closest('.goal-delete');
+    if (button) deleteGoal(Number(button.dataset.id));
+  });
+
+  $('#month-prev').addEventListener('click', () => shiftMonthlyMonth(-1));
+  $('#month-next').addEventListener('click', () => shiftMonthlyMonth(1));
+  $('#month-current').addEventListener('click', () => {
+    state.month = new Date().toISOString().slice(0, 7);
+    loadMonthly();
+  });
+  $('#month-calendar').addEventListener('click', (event) => {
+    const day = event.target.closest('.month-day[data-date]');
+    if (!day) return;
+    state.date = day.dataset.date;
+    switchView('today');
+  });
 
   $('#theme-presets').addEventListener('click', (event) => {
     const swatch = event.target.closest('.theme-swatch');

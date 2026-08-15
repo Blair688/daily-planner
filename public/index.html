@@ -57,6 +57,7 @@
         <button class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>总览</span></button>
         <button class="nav-item" data-view="today"><i data-lucide="list-todo"></i><span>今日</span></button>
         <button class="nav-item" data-view="timeline"><i data-lucide="clock-3"></i><span>时间轴</span></button>
+        <button class="nav-item" data-view="monthly"><i data-lucide="calendar-range"></i><span>月历</span></button>
         <button class="nav-item" data-view="habits"><i data-lucide="repeat-2"></i><span>习惯</span></button>
         <button class="nav-item" data-view="focus"><i data-lucide="timer"></i><span>专注</span></button>
         <button class="nav-item" data-view="review"><i data-lucide="notebook-pen"></i><span>复盘</span></button>
@@ -146,6 +147,19 @@
         </section>
       </section>
 
+      <section id="view-monthly" class="view">
+        <div class="page-heading">
+          <div><h2>月度日程</h2><span id="month-label" class="muted"></span></div>
+          <div class="date-nav">
+            <button id="month-prev" class="icon-btn"><i data-lucide="chevron-left"></i></button>
+            <button id="month-current" class="button compact">本月</button>
+            <button id="month-next" class="icon-btn"><i data-lucide="chevron-right"></i></button>
+          </div>
+        </div>
+        <div id="month-summary" class="stats-grid"></div>
+        <div class="month-calendar" id="month-calendar"></div>
+      </section>
+
       <section id="view-habits" class="view">
         <div class="page-heading">
           <div><h2>习惯打卡</h2><span id="habit-month-label" class="muted"></span></div>
@@ -214,11 +228,39 @@
             <button id="review-next" class="icon-btn"><i data-lucide="chevron-right"></i></button>
           </div>
         </div>
-        <div id="review-summary" class="stats-grid compact"></div>
-        <section class="panel">
+        <div class="review-tabs">
+          <button class="review-tab" data-review-tab="daily">日复盘</button>
+          <button class="review-tab active" data-review-tab="weekly">周复盘</button>
+          <button class="review-tab" data-review-tab="yearly">年度复盘</button>
+          <button class="review-tab" data-review-tab="goals">年度目标</button>
+        </div>
+        <section class="panel review-panel" id="review-panel-daily">
+          <div class="panel-heading"><h2>今日复盘</h2><span class="muted">今天做得好、没做完、明天怎么调整</span></div>
+          <label class="field"><span>日期</span><input id="daily-review-date" type="date"></label>
+          <textarea id="daily-review-content" class="review-editor" rows="10" placeholder="写下今天的复盘..."></textarea>
+          <button id="daily-review-save" class="button primary"><i data-lucide="save"></i><span>保存日复盘</span></button>
+        </section>
+        <section class="panel review-panel" id="review-panel-weekly">
+          <div id="review-summary" class="stats-grid compact"></div>
           <div class="panel-heading"><h2>这一周过得怎么样</h2><span class="muted">记录完成的事、未完成的原因和下周计划</span></div>
-          <textarea id="review-content" class="review-editor" rows="14" placeholder="写下你的复盘..."></textarea>
-          <button id="review-save" class="button primary"><i data-lucide="save"></i><span>保存复盘</span></button>
+          <textarea id="review-content" class="review-editor" rows="12" placeholder="写下你的周复盘..."></textarea>
+          <button id="review-save" class="button primary"><i data-lucide="save"></i><span>保存周复盘</span></button>
+        </section>
+        <section class="panel review-panel" id="review-panel-yearly">
+          <div class="panel-heading"><h2>年度复盘</h2><span class="muted">回看这一年最重要的变化和成长</span></div>
+          <label class="field"><span>年份</span><input id="yearly-review-year" type="number" min="2020" max="2100"></label>
+          <textarea id="yearly-review-content" class="review-editor" rows="12" placeholder="写下年度复盘..."></textarea>
+          <button id="yearly-review-save" class="button primary"><i data-lucide="save"></i><span>保存年度复盘</span></button>
+        </section>
+        <section class="panel review-panel" id="review-panel-goals">
+          <div class="panel-heading"><h2>年度目标</h2><span class="muted">写下这一年想完成的重要目标</span></div>
+          <label class="field"><span>年份</span><input id="goals-year" type="number" min="2020" max="2100"></label>
+          <div class="action-row">
+            <label class="field"><span>新目标</span><input id="goal-title" type="text" maxlength="120" placeholder="例如：读完 20 本书"></label>
+            <select id="goal-status"><option value="todo">未开始</option><option value="doing">进行中</option><option value="done">已完成</option></select>
+            <button id="goal-add" class="button primary"><i data-lucide="plus"></i><span>添加目标</span></button>
+          </div>
+          <div id="goal-list" class="goal-list"></div>
         </section>
       </section>
 
@@ -274,6 +316,7 @@
     <nav class="bottom-nav" aria-label="底部导航">
       <button class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>总览</span></button>
       <button class="nav-item" data-view="today"><i data-lucide="list-todo"></i><span>今日</span></button>
+      <button class="nav-item" data-view="monthly"><i data-lucide="calendar-range"></i><span>月历</span></button>
       <button class="nav-item" data-view="habits"><i data-lucide="repeat-2"></i><span>习惯</span></button>
       <button class="nav-item" data-view="focus"><i data-lucide="timer"></i><span>专注</span></button>
       <button class="nav-item" data-view="settings"><i data-lucide="settings"></i><span>设置</span></button>

@@ -991,6 +991,42 @@ svg {
 }
 
 /* Review */
+.review-tabs {
+  display: flex;
+  gap: 4px;
+  background: #eef1f4;
+  padding: 4px;
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  overflow-x: auto;
+}
+
+.review-tab {
+  flex: 1;
+  min-width: 88px;
+  height: 34px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.review-tab.active {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.review-panel {
+  display: block;
+}
+
+.review-panel.hidden {
+  display: none;
+}
+
 .review-editor {
   width: 100%;
   min-height: 260px;
@@ -998,6 +1034,101 @@ svg {
   border-radius: var(--radius);
   padding: 14px;
   resize: vertical;
+}
+
+.goal-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.goal-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.goal-item strong {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.goal-status {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #eef1f4;
+  color: var(--muted);
+}
+
+.goal-status.doing {
+  background: #e8f0fd;
+  color: #2457b0;
+}
+
+.goal-status.done {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+/* Monthly calendar */
+.month-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.month-weekday {
+  padding: 6px 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.month-day {
+  min-height: 96px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+}
+
+.month-day:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.month-day.today {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.month-day .day-num {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.month-day .day-stats {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.month-day .day-stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* Settings */

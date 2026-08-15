@@ -53,6 +53,10 @@ try {
   await desktop.click('button[data-view="timeline"]');
   await desktop.waitForSelector('.timeline-block');
 
+  await desktop.click('button[data-view="monthly"]');
+  await desktop.waitForSelector('.month-day[data-date]');
+  const monthDays = await desktop.locator('.month-day[data-date]').count();
+
   await desktop.click('button[data-view="habits"]');
   await desktop.waitForSelector('#habit-add');
   await desktop.click('#habit-add');
@@ -71,6 +75,14 @@ try {
   await desktop.click('button[data-view="review"]');
   await desktop.waitForSelector('#review-content');
   await desktop.fill('#review-content', '本周界面验证');
+  await desktop.click('[data-review-tab="daily"]');
+  await desktop.fill('#daily-review-content', '今天界面验证');
+  await desktop.click('#daily-review-save');
+  await desktop.waitForTimeout(500);
+  await desktop.click('[data-review-tab="goals"]');
+  await desktop.fill('#goal-title', '年度目标验证');
+  await desktop.click('#goal-add');
+  await desktop.waitForSelector('.goal-item');
 
   await desktop.click('button[data-view="settings"]');
   await desktop.waitForSelector('#theme-presets .theme-swatch');
@@ -96,6 +108,7 @@ try {
   console.log(JSON.stringify({
     username,
     timerText,
+    monthDays,
     desktopOverflowLogin,
     desktopOverflow,
     mobileOverflow,

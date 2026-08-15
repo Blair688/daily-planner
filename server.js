@@ -218,6 +218,57 @@ app.get('/api/focus/sessions', (req, res) => {
   res.json(db.getFocusSessions(req.userId, { date: date || undefined, from: from || undefined, to: to || undefined }));
 });
 
+app.get('/api/reviews/daily', (req, res) => {
+  const date = req.query.date || new Date().toISOString().slice(0, 10);
+  res.json(db.getDailyReview(req.userId, date) || { date, content: '' });
+});
+
+app.put('/api/reviews/daily', (req, res) => {
+  const date = (req.body || {}).date;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) return res.status(400).json({ error: '日期格式应为 YYYY-MM-DD' });
+  res.json(db.saveDailyReview(req.userId, date, (req.body || {}).content));
+});
+
+app.get('/api/reviews/yearly', (req, res) => {
+  const year = Number(req.query.year) || new Date().getFullYear();
+  res.json(db.getYearlyReview(req.userId, year) || { year, content: '' });
+});
+
+app.put('/api/reviews/yearly', (req, res) => {
+  const year = Number((req.body || {}).year);
+  if (!Number.isInteger(year)) return res.status(400).json({ error: '年份格式不正确' });
+  res.json(db.saveYearlyReview(req.userId, year, (req.body || {}).content));
+});
+
+app.get('/api/goals', (req, res) => {
+  const year = Number(req.query.year) || new Date().getFullYear();
+  res.json(db.getAnnualGoals(req.userId, year));
+});
+
+app.post('/api/goals', (req, res) => {
+  try {
+    const year = Number((req.body || {}).year);
+    if (!Number.isInteger(year)) return res.status(400).json({ error: '年份格式不正确' });
+    res.status(201).json(db.createAnnualGoal(req.userId, { ...req.body, year }));
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.patch('/api/goals/:id', (req, res) => {
+  try {
+    const goal = db.updateAnnualGoal(Number(req.params.id), req.userId, req.body || {});
+    if (!goal) return res.status(404).json({ error: '年度目标不存在' });
+    res.json(goal);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/api/goals/:id', (req, res) => {
+  res.json({ ok: db.deleteAnnualGoal(Number(req.params.id), req.userId) });
+});
+
 app.get('/api/reviews/:year/:week', (req, res) => {
   const year = Number(req.params.year);
   const week = Number(req.params.week);
@@ -232,6 +283,12 @@ app.put('/api/reviews/:year/:week', (req, res) => {
 
 app.get('/api/stats/dashboard', (req, res) => {
   res.json(db.getDashboardStats(req.userId, req.query.date || undefined));
+});
+
+app.get('/api/stats/month', (req, res) => {
+  const month = req.query.month || new Date().toISOString().slice(0, 7);
+  if (!/^\d{4}-\d{2}$/.test(month)) return res.status(400).json({ error: '月份格式应为 YYYY-MM' });
+  res.json(db.getMonthStats(req.userId, month));
 });
 
 app.get('/api/backup', (req, res) => {
