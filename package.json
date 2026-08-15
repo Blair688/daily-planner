@@ -1,0 +1,22 @@
+{
+  "name": "daily-planner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "日常规划：优先级待办 + 智能排程 + iCloud 日历/提醒事项双向同步",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/scheduler.test.js tests/caldav.test.js tests/api.test.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "express": "^5.2.1",
+    "fast-xml-parser": "^5.10.1",
+    "lucide": "^1.31.0",
+    "node-ical": "^0.27.1"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.62.1"
+  }
+}

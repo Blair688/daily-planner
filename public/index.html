@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1f6f5c">
+  <title>日常规划</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <i data-lucide="calendar-check"></i>
+      </span>
+      <div>
+        <strong>日常规划</strong>
+        <span id="today-label" class="subline"></span>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="主视图">
+      <button class="tab active" data-view="today" aria-selected="true">
+        <i data-lucide="list-todo"></i><span>今日</span>
+      </button>
+      <button class="tab" data-view="timeline" aria-selected="false">
+        <i data-lucide="clock-3"></i><span>时间轴</span>
+      </button>
+      <button class="tab" data-view="settings" aria-selected="false">
+        <i data-lucide="settings"></i><span>设置</span>
+      </button>
+    </nav>
+    <div class="top-actions">
+      <button id="sync-button" class="button subtle" title="立即同步 iCloud">
+        <i data-lucide="refresh-cw"></i><span>同步</span>
+      </button>
+      <button id="menu-date-prev" class="icon-btn" title="前一天">
+        <i data-lucide="chevron-left"></i>
+      </button>
+      <button id="menu-date-today" class="button subtle compact" title="回到今天">今天</button>
+      <button id="menu-date-next" class="icon-btn" title="后一天">
+        <i data-lucide="chevron-right"></i>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section id="view-today" class="view active">
+      <div class="summary-strip" aria-label="今日概览">
+        <div class="stat">
+          <span class="stat-label">任务</span>
+          <strong id="stat-total">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">已完成</span>
+          <strong id="stat-done">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">未排期</span>
+          <strong id="stat-unscheduled">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">预计时长</span>
+          <strong id="stat-duration">0 分钟</strong>
+        </div>
+        <button id="auto-schedule" class="button primary">
+          <i data-lucide="wand-2"></i><span>自动排程</span>
+        </button>
+        <label class="check-inline" title="重新计算当天已有的自动排程时间">
+          <input id="regenerate-check" type="checkbox">
+          <span>重排当天</span>
+        </label>
+      </div>
+
+      <div class="workspace-grid">
+        <section class="panel add-panel" aria-label="添加任务">
+          <div class="panel-heading">
+            <h2>添加任务</h2>
+            <button id="form-clear" class="button subtle compact" type="button">
+              <i data-lucide="rotate-ccw"></i><span>清空</span>
+            </button>
+          </div>
+          <form id="task-form">
+            <input type="hidden" id="task-id">
+            <label class="field span-2">
+              <span>任务内容</span>
+              <input id="task-title" type="text" maxlength="120" placeholder="例如：准备周报、跑步 5 公里">
+            </label>
+            <label class="field">
+              <span>日期</span>
+              <input id="task-date" type="date">
+            </label>
+            <label class="field">
+              <span>优先级</span>
+              <select id="task-priority">
+                <option value="P1">P1 高</option>
+                <option value="P2" selected>P2 中</option>
+                <option value="P3">P3 低</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>分类</span>
+              <select id="task-category">
+                <option value="工作">工作</option>
+                <option value="学习">学习</option>
+                <option value="生活">生活</option>
+                <option value="健康">健康</option>
+                <option value="其他" selected>其他</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>开始时间（留空自动安排）</span>
+              <input id="task-time" type="time">
+            </label>
+            <label class="field">
+              <span>时长（分钟，留空智能估算）</span>
+              <input id="task-duration" type="number" min="1" max="1440" placeholder="30">
+            </label>
+            <label class="field span-2">
+              <span>备注</span>
+              <input id="task-note" type="text" maxlength="500" placeholder="可选">
+            </label>
+            <div class="sync-toggles span-2">
+              <label class="toggle">
+                <input id="task-sync-calendar" type="checkbox" checked>
+                <span class="switch"></span>
+                <span>同步到日历</span>
+              </label>
+              <label class="toggle">
+                <input id="task-sync-reminder" type="checkbox">
+                <span class="switch"></span>
+                <span>同步到提醒事项</span>
+              </label>
+            </div>
+            <button id="form-submit" class="button primary span-2" type="submit">
+              <i data-lucide="plus"></i><span>添加任务</span>
+            </button>
+          </form>
+        </section>
+
+        <section class="panel task-panel" aria-label="任务列表">
+          <div class="panel-heading">
+            <h2>待办列表</h2>
+            <span id="task-count" class="muted"></span>
+          </div>
+          <div id="task-list" class="task-list"></div>
+          <div id="task-empty" class="empty-state">
+            <i data-lucide="inbox"></i>
+            <p>这一天还没有任务</p>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="view-timeline" class="view">
+      <div class="timeline-head">
+        <h2><span id="timeline-date"></span> 时间轴</h2>
+        <button id="timeline-schedule" class="button primary">
+          <i data-lucide="wand-2"></i><span>自动排程</span>
+        </button>
+      </div>
+      <div class="timeline-wrap">
+        <div id="timeline" class="timeline"></div>
+      </div>
+      <section class="panel" id="unscheduled-panel">
+        <div class="panel-heading">
+          <h2>未排期</h2>
+          <span id="unscheduled-count" class="muted"></span>
+        </div>
+        <div id="unscheduled-list" class="task-list"></div>
+      </section>
+    </section>
+
+    <section id="view-settings" class="view">
+      <div class="settings-grid">
+        <section class="panel">
+          <div class="panel-heading">
+            <h2>iCloud 同步</h2>
+            <span id="sync-status" class="status-dot"></span>
+          </div>
+          <div class="form-grid">
+            <label class="field span-2">
+              <span>Apple ID（手机号或 iCloud 邮箱）</span>
+              <input id="setting-apple-id" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="13800138000 或 name@icloud.com">
+            </label>
+            <label class="field span-2">
+              <span>App 专用密码</span>
+              <input id="setting-app-password" type="password" autocomplete="current-password" placeholder="在 appleid.apple.com 生成">
+            </label>
+            <label class="field">
+              <span>同步间隔（分钟）</span>
+              <input id="setting-interval" type="number" min="1" max="1440">
+            </label>
+            <label class="field">
+              <span>排程开始时间</span>
+              <input id="setting-day-start" type="time">
+            </label>
+            <label class="field">
+              <span>排程结束时间</span>
+              <input id="setting-day-end" type="time">
+            </label>
+            <label class="field">
+              <span>午休开始</span>
+              <input id="setting-lunch-start" type="time">
+            </label>
+            <label class="field">
+              <span>午休结束</span>
+              <input id="setting-lunch-end" type="time">
+            </label>
+            <label class="toggle field">
+              <input id="setting-calendar-enabled" type="checkbox" checked>
+              <span class="switch"></span>
+              <span>启用日历同步</span>
+            </label>
+            <label class="toggle field">
+              <input id="setting-reminder-enabled" type="checkbox">
+              <span class="switch"></span>
+              <span>启用提醒事项同步</span>
+            </label>
+            <label class="field">
+              <span>iCloud 日历</span>
+              <select id="setting-calendar-href"></select>
+            </label>
+            <label class="field">
+              <span>提醒列表</span>
+              <select id="setting-reminder-href"></select>
+            </label>
+            <div class="action-row span-2">
+              <button id="test-connection" class="button">
+                <i data-lucide="plug"></i><span>测试连接</span>
+              </button>
+              <button id="diagnose-connection" class="button">
+                <i data-lucide="activity"></i><span>同步诊断</span>
+              </button>
+              <button id="save-settings" class="button primary">
+                <i data-lucide="save"></i><span>保存设置</span>
+              </button>
+            </div>
+            <div id="connection-result" class="result-box span-2"></div>
+            <div id="diagnose-result" class="result-box span-2"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <h2>同步记录</h2>
+          </div>
+          <div class="sync-log">
+            <div><span class="muted">最近同步</span><strong id="sync-last-at">尚未同步</strong></div>
+            <div><span class="muted">状态</span><strong id="sync-last-status">-</strong></div>
+            <div><span class="muted">说明</span><strong id="sync-last-message">-</strong></div>
+          </div>
+          <button id="manual-sync" class="button primary full">
+            <i data-lucide="refresh-cw"></i><span>立即同步</span>
+          </button>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <h2>主题颜色</h2>
+          </div>
+          <div id="theme-presets" class="theme-presets"></div>
+          <div class="theme-custom">
+            <label class="field">
+              <span>自定义主色</span>
+              <input id="theme-color" type="color" value="#1f6f5c">
+            </label>
+          </div>
+          <button id="theme-save" class="button primary full">
+            <i data-lucide="palette"></i><span>应用主题</span>
+          </button>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <h2>自动排程规则</h2>
+            <button id="rule-add" class="button subtle compact">
+              <i data-lucide="plus"></i><span>新增</span>
+            </button>
+          </div>
+          <p class="hint">标题包含关键词时，按对应时长放入上午、下午或晚上；未匹配时按分类兜底。</p>
+          <div id="rule-list" class="rule-list"></div>
+          <button id="rule-save" class="button primary full">
+            <i data-lucide="save"></i><span>保存规则</span>
+          </button>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <h2>数据与访问</h2>
+          </div>
+          <div class="form-grid">
+            <div id="access-urls" class="result-box span-2"></div>
+            <div class="action-row span-2">
+              <a id="backup-export" class="button" href="/api/backup" download>
+                <i data-lucide="download"></i><span>导出备份</span>
+              </a>
+              <label class="button">
+                <i data-lucide="upload"></i><span>导入备份</span>
+                <input id="backup-import" type="file" accept="application/json,.json" hidden>
+              </label>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/vendor/lucide.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "日常规划",
+  "short_name": "规划",
+  "description": "优先级待办、智能排程与 iCloud 日历/提醒事项同步",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f2f4f6",
+  "theme_color": "#1f6f5c",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
