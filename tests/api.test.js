@@ -138,8 +138,18 @@ test('API 端到端：多账号、任务、习惯、专注、复盘', async () =
     const bobHabits = await api(base, '/api/habits', {}, secondToken);
     assert.equal(bobHabits.data.length, 0);
 
-    const deleted = await api(base, `/api/tasks/${created.data.id}`, { method: 'DELETE' }, token);
-    assert.equal(deleted.status, 200);
+    await api(base, '/api/tasks', {
+      method: 'POST',
+      body: { title: '待清空任务', date: '2026-08-15' }
+    }, token);
+    const cleared = await api(base, '/api/tasks/clear', {
+      method: 'POST',
+      body: { scope: 'pending' }
+    }, token);
+    assert.equal(cleared.status, 200);
+    assert.ok(cleared.data.count >= 2);
+    const afterClear = await api(base, '/api/tasks', {}, token);
+    assert.equal(afterClear.data.length, 0);
   } finally {
     child.kill();
     try {

@@ -446,6 +446,21 @@ async function autoSchedule(regenerate = false) {
   }
 }
 
+async function clearPendingTasks() {
+  if (!confirm('确定清空所有待办任务吗？已完成的任务会保留。')) return;
+  try {
+    const result = await api('/api/tasks/clear', {
+      method: 'POST',
+      body: JSON.stringify({ scope: 'pending' })
+    });
+    toast(`已清空 ${result.count} 项待办任务`);
+    await loadTasks();
+    if (state.view === 'dashboard') loadDashboard();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+}
+
 /* Timeline drag */
 function renderTimeline() {
   const timeline = $('#timeline');
@@ -1071,6 +1086,7 @@ function bindEvents() {
   $('#task-form').addEventListener('submit', submitTask);
   $('#form-clear').addEventListener('click', clearTaskForm);
   $('#auto-schedule').addEventListener('click', () => autoSchedule($('#regenerate-check').checked));
+  $('#clear-tasks').addEventListener('click', clearPendingTasks);
   $('#timeline-schedule').addEventListener('click', () => autoSchedule(true));
   $('#dashboard-schedule').addEventListener('click', () => autoSchedule(true));
   $('#timeline').addEventListener('pointerdown', handleTimelinePointerDown);

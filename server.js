@@ -93,6 +93,12 @@ app.post('/api/tasks', (req, res) => {
   }
 });
 
+app.post('/api/tasks/clear', (req, res) => {
+  const scope = (req.body || {}).scope === 'all' ? 'all' : 'pending';
+  const count = db.clearTasks(req.userId, scope);
+  res.json({ ok: true, count });
+});
+
 app.patch('/api/tasks/:id', (req, res) => {
   const task = db.updateTask(Number(req.params.id), req.body || {}, req.userId);
   if (!task) return res.status(404).json({ error: '任务不存在' });

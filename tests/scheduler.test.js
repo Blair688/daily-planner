@@ -61,6 +61,8 @@ test('parseDurationFromTitle 支持数量词', () => {
   assert.equal(parseDurationFromTitle('写报告 1 小时').duration, 60);
   assert.equal(parseDurationFromTitle('阅读半小时').duration, 30);
   assert.equal(parseDurationFromTitle('开 90 分钟的会议').duration, 90);
+  assert.equal(parseDurationFromTitle('阅读 50 页').duration, 50);
+  assert.equal(parseDurationFromTitle('做 30 道题').duration, 30);
 });
 
 test('scheduleDay 尊重自定义时段和午休', () => {
