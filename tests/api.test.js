@@ -61,6 +61,9 @@ test('API 端到端：多账号、任务、习惯、专注、复盘', async () =
   const { child, port, dbPath } = await startServer();
   const base = `http://localhost:${port}`;
   try {
+    const freshUsers = await api(base, '/api/users');
+    assert.equal(freshUsers.data.length, 0);
+
     const registered = await api(base, '/api/auth/register', {
       method: 'POST',
       body: { username: 'alice', display_name: '爱丽丝', password: 'secret123' }

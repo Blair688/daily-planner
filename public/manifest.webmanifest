@@ -1,7 +1,7 @@
 {
   "name": "日常规划",
   "short_name": "规划",
-  "description": "优先级待办、智能排程与 iCloud 日历/提醒事项同步",
+  "description": "本地多账号日程规划：任务、习惯、专注、复盘与月历",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

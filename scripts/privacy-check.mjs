@@ -21,7 +21,7 @@ for (const file of files) {
   const checks = [
     { name: '手机号', re: /\b1[3-9]\d{9}\b/ },
     { name: '邮箱', re: /\b[\w.+-]+@[\w-]+\.\w+\b/ },
-    { name: 'iCloud 账号字段', re: /apple_id|app_password|@icloud\.com/i }
+    { name: '第三方凭据字段', re: /apple_id|app_password|access_token|client_secret/i }
   ];
   if (!file.startsWith('tests/') && !file.includes('privacy-check')) {
     checks.push({ name: '疑似明文密码', re: /(?:password|passwd|密码)\s*[:=]\s*['"][^'"]{8,}['"]/i });

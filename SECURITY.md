@@ -17,7 +17,7 @@ npm run privacy-check
 npm test
 ```
 
-`privacy-check` 会扫描 Git 跟踪文件，检查是否存在手机号、邮箱、iCloud 账号字段或疑似明文密码。
+`privacy-check` 会扫描 Git 跟踪文件，检查是否存在手机号、邮箱、第三方账号/凭据字段或疑似明文密码。
 
 ## 报告问题
 
